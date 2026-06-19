@@ -1,5 +1,5 @@
-'use client';
-import { useEffect, useState } from 'react';
+"use client";
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
@@ -31,9 +31,11 @@ function timeSince(prev: string | null, curr: string) {
   return `+${(ms / 60000).toFixed(1)}m`;
 }
 
-export default function SessionDetailPage({ params }: { params: { id: string } }) {
+export default function SessionDetailPage({ params }: { params: any }) {
   const router = useRouter();
-  const sessionId = decodeURIComponent(params.id);
+  // `params` can be a Promise in client components — unwrap with React.use
+  const resolvedParams = React.use(params as any) as { id: string };
+  const sessionId = decodeURIComponent(resolvedParams.id || '');
 
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);

@@ -40,25 +40,32 @@
   // ── Event queue & flush ──────────────────────────────────────
   const queue = [];
 
+  function sendBatchPayload(payload) {
+    const blob = new Blob([payload], { type: 'application/json' });
+
+    if (navigator.sendBeacon) {
+      const beaconOk = navigator.sendBeacon(config.apiUrl, blob);
+      if (beaconOk) {
+        return;
+      }
+      console.warn('[CF Tracker] sendBeacon failed, falling back to fetch');
+    }
+
+    fetch(config.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload,
+      keepalive: true,
+    }).catch(function (err) {
+      console.warn('[CF Tracker] Failed to send events:', err);
+    });
+  }
+
   function flush() {
     if (queue.length === 0) return;
     const batch = queue.splice(0, queue.length);
     const payload = JSON.stringify(batch);
-
-    // Use sendBeacon when available (non-blocking, survives page unload)
-    if (navigator.sendBeacon) {
-      const blob = new Blob([payload], { type: 'application/json' });
-      navigator.sendBeacon(config.apiUrl, blob);
-    } else {
-      fetch(config.apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: payload,
-        keepalive: true,
-      }).catch(function (err) {
-        console.warn('[CF Tracker] Failed to send events:', err);
-      });
-    }
+    sendBatchPayload(payload);
   }
 
   // Periodic flush
@@ -89,6 +96,7 @@
 
   // ── Auto-track page_view ──────────────────────────────────────
   track('page_view');
+  flush();
 
   // ── Auto-track clicks ─────────────────────────────────────────
   document.addEventListener(
@@ -103,6 +111,7 @@
         targetTag: e.target ? e.target.tagName.toLowerCase() : '',
         targetId: e.target ? e.target.id || '' : '',
       });
+      flush();
     },
     true // capture phase so we get all clicks
   );

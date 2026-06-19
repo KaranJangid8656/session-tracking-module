@@ -6,7 +6,7 @@ const Event = require('../models/Event');
 // POST /api/events
 // Receive and store a single event (or batch array of events)
 // ─────────────────────────────────────────────────────────────
-router.post('/', async (req, res) => {
+router.post('/events', async (req, res) => {
   try {
     const payload = req.body;
 
@@ -89,6 +89,26 @@ router.get('/sessions/:sessionId', async (req, res) => {
     return res.json({ success: true, sessionId, events });
   } catch (err) {
     console.error('GET /sessions/:sessionId error:', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// GET /api/heatmap?pageUrl=...
+// Return click events (x,y) for a specific page to render a heatmap
+// ─────────────────────────────────────────────────────────────
+router.get('/heatmap', async (req, res) => {
+  try {
+    const pageUrl = req.query.pageUrl;
+    if (!pageUrl) return res.status(400).json({ success: false, error: 'Missing pageUrl query parameter' });
+
+    const clicks = await Event.find({ pageUrl: pageUrl, eventType: 'click', x: { $ne: null }, y: { $ne: null } })
+      .select('x y viewportWidth viewportHeight timestamp')
+      .lean();
+
+    return res.json({ success: true, pageUrl, clicks, count: clicks.length });
+  } catch (err) {
+    console.error('GET /heatmap error:', err);
     return res.status(500).json({ success: false, error: err.message });
   }
 });
