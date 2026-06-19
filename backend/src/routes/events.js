@@ -93,45 +93,5 @@ router.get('/sessions/:sessionId', async (req, res) => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────
-// GET /api/heatmap?pageUrl=<url>
-// Return all click events for a given page URL
-// ─────────────────────────────────────────────────────────────
-router.get('/heatmap', async (req, res) => {
-  try {
-    const { pageUrl } = req.query;
-    if (!pageUrl) {
-      return res
-        .status(400)
-        .json({ success: false, error: 'pageUrl query param is required' });
-    }
-
-    const clicks = await Event.find({ pageUrl, eventType: 'click' })
-      .select('x y timestamp sessionId viewportWidth viewportHeight -_id')
-      .lean();
-
-    // Also return the list of all unique pages for the dropdown
-    const allPages = await Event.distinct('pageUrl');
-
-    return res.json({ success: true, pageUrl, clicks, allPages });
-  } catch (err) {
-    console.error('GET /heatmap error:', err);
-    return res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// ─────────────────────────────────────────────────────────────
-// GET /api/pages
-// Return distinct pageUrls (for heatmap dropdown)
-// ─────────────────────────────────────────────────────────────
-router.get('/pages', async (req, res) => {
-  try {
-    const pages = await Event.distinct('pageUrl');
-    return res.json({ success: true, pages });
-  } catch (err) {
-    console.error('GET /pages error:', err);
-    return res.status(500).json({ success: false, error: err.message });
-  }
-});
 
 module.exports = router;

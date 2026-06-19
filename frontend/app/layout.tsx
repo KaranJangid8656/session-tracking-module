@@ -3,9 +3,8 @@ import './globals.css';
 import Navbar from '@/components/Navbar';
 
 export const metadata: Metadata = {
-  title: 'CausalFunnel Analytics Dashboard',
-  description:
-    'Real-time user session tracking and click heatmap analytics dashboard.',
+  title: 'Session Tracker',
+  description: 'Browse captured sessions for the tracker.',
 };
 
 export default function RootLayout({

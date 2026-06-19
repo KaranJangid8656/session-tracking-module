@@ -52,123 +52,158 @@ export default function SessionsPage() {
 
   const totalEvents = sessions.reduce((a, s) => a + s.eventCount, 0);
   const totalClicks = sessions.reduce((a, s) => a + s.clickCount, 0);
-  const totalViews  = sessions.reduce((a, s) => a + s.pageViewCount, 0);
+  const totalViews = sessions.reduce((a, s) => a + s.pageViewCount, 0);
+  const uniquePages = new Set(sessions.flatMap((s) => s.pageUrls)).size;
+  const avgDuration = sessions.length
+    ? Math.round(
+        sessions.reduce((sum, s) => {
+          const diff = new Date(s.lastSeen).getTime() - new Date(s.firstSeen).getTime();
+          return sum + diff;
+        }, 0) / sessions.length / 1000
+      )
+    : 0;
 
   return (
     <main className="page-wrapper">
-      {/* Header */}
-      <div className="page-header fade-up">
-        <h1>User Sessions</h1>
-        <p>Every tracked session and their interaction events, most recent first.</p>
-      </div>
+      <section className="page-header">
+        <h1>Sessions</h1>
+        <p>Browse and inspect the session data captured by the tracker.</p>
+      </section>
 
-      {/* Stat cards */}
-      {!loading && !error && (
-        <div className="stats-row fade-up stagger-1">
-          <div className="stat-card">
-            <div className="stat-label">Total Sessions</div>
-            <div className="stat-value accent">{sessions.length}</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">Total Events</div>
-            <div className="stat-value">{totalEvents}</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">Page Views</div>
-            <div className="stat-value green">{totalViews}</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-label">Clicks</div>
-            <div className="stat-value pink">{totalClicks}</div>
+      <section className="stats-row">
+        <div className="stat-card">
+          <div className="stat-label">Sessions tracked</div>
+          <div className="stat-value accent">{loading ? '…' : sessions.length}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Page views</div>
+          <div className="stat-value green">{loading ? '…' : totalViews}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Clicks captured</div>
+          <div className="stat-value pink">{loading ? '…' : totalClicks}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Pages tracked</div>
+          <div className="stat-value amber">{loading ? '…' : uniquePages}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Avg session</div>
+          <div className="stat-value cyan">{loading ? '…' : `${avgDuration}s`}</div>
+        </div>
+      </section>
+
+      <section className="feature-band">
+        <div className="section-header">
+          <div>
+            <h2>Heatmap & analytics</h2>
+            <p>Session analytics and heatmap readiness are visible here.</p>
           </div>
         </div>
-      )}
 
-      {/* Loading */}
-      {loading && (
-        <div className="loading-wrap">
-          <div className="spinner" />
-          <span>Loading sessions…</span>
-        </div>
-      )}
-
-      {/* Error */}
-      {error && <div className="error-box">⚠️ {error}</div>}
-
-      {/* Table */}
-      {!loading && !error && (
-        <div className="table-container fade-up stagger-2">
-          <div className="table-header">
-            <span className="table-title">Sessions</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <input
-                type="text"
-                placeholder="Search session ID…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                style={{
-                  background: 'var(--surface2)',
-                  border: '1px solid var(--border2)',
-                  borderRadius: 'var(--radius-sm)',
-                  color: 'var(--text)',
-                  padding: '.4rem .8rem',
-                  fontSize: '.85rem',
-                  outline: 'none',
-                  width: '200px',
-                }}
-              />
-              <span className="table-count">{filtered.length} sessions</span>
-            </div>
+        <div className="feature-cards">
+          <div className="feature-card">
+            <h3>Heatmap status</h3>
+            <p>
+              {loading
+                ? 'Loading click data…'
+                : totalClicks > 0
+                ? 'Heatmap data is available from tracked clicks.'
+                : 'No clicks captured yet for heatmap rendering.'}
+            </p>
           </div>
+          <div className="feature-card">
+            <h3>Session analytics</h3>
+            <p>Review total sessions, page views, clicks, and average session length instantly.</p>
+          </div>
+          <div className="feature-card">
+            <h3>Ready for visualization</h3>
+            <p>Heatmap-ready click events are collected automatically from each session.</p>
+          </div>
+        </div>
+      </section>
 
-          {filtered.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-icon">📭</div>
-              <div className="empty-title">No sessions yet</div>
-              <div className="empty-desc">
-                Open the demo page and interact with it to start generating events.
+      <section className="table-section">
+        <div className="section-header">
+          <div>
+            <h2>Recent session activity</h2>
+            <p>Browse the latest captured sessions.</p>
+          </div>
+        </div>
+
+        {loading && (
+          <div className="loading-wrap">
+            <div className="spinner" />
+            <span>Loading sessions…</span>
+          </div>
+        )}
+
+        {error && <div className="error-box">⚠️ {error}</div>}
+
+        {!loading && !error && (
+          <div className="table-container">
+            <div className="table-header">
+              <span className="table-title">Sessions</span>
+              <div className="search-row">
+                <input
+                  type="text"
+                  placeholder="Search session ID…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+                <span className="table-count">{filtered.length} sessions</span>
               </div>
             </div>
-          ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Session ID</th>
-                  <th>Events</th>
-                  <th>Page Views</th>
-                  <th>Clicks</th>
-                  <th>Duration</th>
-                  <th>First Seen</th>
-                  <th>Last Active</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((s) => (
-                  <tr
-                    key={s.sessionId}
-                    onClick={() => router.push(`/sessions/${encodeURIComponent(s.sessionId)}`)}
-                    title="Click to view session journey"
-                  >
-                    <td className="td-session">{s.sessionId}</td>
-                    <td>
-                      <span className="badge badge-blue">{s.eventCount}</span>
-                    </td>
-                    <td>
-                      <span className="badge badge-green">{s.pageViewCount}</span>
-                    </td>
-                    <td>
-                      <span className="badge badge-pink">{s.clickCount}</span>
-                    </td>
-                    <td className="td-muted">{duration(s.firstSeen, s.lastSeen)}</td>
-                    <td className="td-muted">{formatDate(s.firstSeen)}</td>
-                    <td className="td-muted">{formatDate(s.lastSeen)}</td>
+
+            {filtered.length === 0 ? (
+              <div className="empty-state">
+                <div className="empty-icon">📭</div>
+                <div className="empty-title">No sessions yet</div>
+                <div className="empty-desc">
+                  No session data has been captured yet.
+                </div>
+              </div>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Session ID</th>
+                    <th>Events</th>
+                    <th>Page Views</th>
+                    <th>Clicks</th>
+                    <th>Duration</th>
+                    <th>First Seen</th>
+                    <th>Last Active</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
+                </thead>
+                <tbody>
+                  {filtered.map((s) => (
+                    <tr
+                      key={s.sessionId}
+                      onClick={() => router.push(`/sessions/${encodeURIComponent(s.sessionId)}`)}
+                      title="Click to view session journey"
+                    >
+                      <td className="td-session">{s.sessionId}</td>
+                      <td>
+                        <span className="badge badge-blue">{s.eventCount}</span>
+                      </td>
+                      <td>
+                        <span className="badge badge-green">{s.pageViewCount}</span>
+                      </td>
+                      <td>
+                        <span className="badge badge-pink">{s.clickCount}</span>
+                      </td>
+                      <td className="td-muted">{duration(s.firstSeen, s.lastSeen)}</td>
+                      <td className="td-muted">{formatDate(s.firstSeen)}</td>
+                      <td className="td-muted">{formatDate(s.lastSeen)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+      </section>
     </main>
   );
 }
