@@ -33,7 +33,7 @@ const eventSchema = new mongoose.Schema(
     // Optional metadata
     userAgent: {
       type: String,
-      default: '',
+      default: '' ,
     },
     viewportWidth: {
       type: Number,
