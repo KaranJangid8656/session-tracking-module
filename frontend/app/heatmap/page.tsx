@@ -30,30 +30,7 @@ export default function HeatmapPage() {
     }
   }
 
-  return (
-    <main style={{ padding: 24 }}>
-      <h1>Heatmap</h1>
-      <p>Enter a page URL to retrieve click coordinates collected by the tracker.</p>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-        <input value={pageUrl} onChange={(e) => setPageUrl(e.target.value)} style={{ flex: 1, padding: 8 }} />
-        <button onClick={fetchHeatmap} style={{ padding: '8px 12px' }}>Fetch</button>
-      </div>
-
-      {loading && <div>Loading heatmap…</div>}
-      {error && <div style={{ color: 'crimson' }}>⚠️ {error}</div>}
-
-      {!loading && !error && (
-        <div>
-          <div style={{ marginBottom: 8 }}>Clicks found: <strong>{clicks.length}</strong></div>
-          {clicks.length === 0 && <div>No click events yet for this page.</div>}
-          {clicks.length > 0 && (
-            <ol>
-              {clicks.map((c, i) => (
-                <li key={i}>x: {c.x}, y: {c.y} — viewport {c.viewportWidth}×{c.viewportHeight} — {new Date(c.timestamp).toLocaleString()}</li>
-              ))}
-            </ol>
-          )}
-        </div>
+ 
       )}
     </main>
   );
